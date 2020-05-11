@@ -12,4 +12,4 @@ class Item(BaseModel):
 
 @app.post("/birds/",status_code=HTTP_200_OK,summary='图片识别接口')
 async def recognize(item : Item):
-        yield main(item.image)
+    return main(item.image)

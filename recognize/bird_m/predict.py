@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+
 import numpy as np
 import logging
 import time
@@ -97,23 +97,20 @@ logger = logging.getLogger(__name__)
 
 
 def parse_args():
-    def str2bool(v):
-        return v.lower() in ("true", "t", "1")
+    class Arg():
+        def __init__(self):
+            self.model_file = "./model"
+            self.params_file = "./params"
+            self.batch_size = 1
+            self.use_fp16 = False
+            self.use_gpu = False
+            self.ir_optim = True
+            self.use_tensorrt = False
+            self.gpu_mem = 8000
+            self.enable_benchmark = False
+            self.model_name = "birdrec"
 
-    parser = argparse.ArgumentParser()
-    # parser.add_argument("-i", "--image_file", type=str)
-    parser.add_argument("-m", "--model_file", type=str,default="./model")
-    parser.add_argument("-p", "--params_file", type=str,default="./params")
-    parser.add_argument("-b", "--batch_size", type=int, default=1)
-    parser.add_argument("--use_fp16", type=str2bool, default=False)
-    parser.add_argument("--use_gpu", type=str2bool, default=False)
-    parser.add_argument("--ir_optim", type=str2bool, default=True)
-    parser.add_argument("--use_tensorrt", type=str2bool, default=False)
-    parser.add_argument("--gpu_mem", type=int, default=8000)
-    parser.add_argument("--enable_benchmark", type=str2bool, default=False)
-    parser.add_argument("--model_name", type=str)
-
-    return parser.parse_args()
+    return Arg()
 
 
 def create_predictor(args):

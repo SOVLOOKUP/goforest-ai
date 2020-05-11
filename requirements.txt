@@ -1,5 +1,6 @@
-paddle
-opencv-python
+wheel
 numpy
+paddlepaddle
+opencv-python
 fastapi
 uvicorn
