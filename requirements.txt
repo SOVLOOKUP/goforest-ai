@@ -1,0 +1,5 @@
+paddle
+cv2
+numpy
+fastapi
+uvicorn
