@@ -1,5 +1,5 @@
 paddle
-cv2
+opencv-python
 numpy
 fastapi
 uvicorn
