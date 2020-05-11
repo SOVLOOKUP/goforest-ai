@@ -12,4 +12,8 @@ class Item(BaseModel):
 
 @app.post("/birds/",status_code=HTTP_200_OK,summary='图片识别接口')
 async def recognize(item : Item):
+    if len(item.image)<40:
+        return {"name":"error","socre":0,"details":"请填入正确base64格式编码的图片。"}
+    #print(type(item.image))
     return main(item.image)
+

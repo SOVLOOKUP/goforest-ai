@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import io
 import numpy as np
 import logging
 import time
@@ -21,7 +21,7 @@ from paddle.fluid.core import PaddleTensor
 from paddle.fluid.core import AnalysisConfig
 from paddle.fluid.core import create_paddle_predictor
 import cv2
-
+from PIL import Image
 
 bird_dict = {'0': '大紫胸鹦鹉', '1': '葵花鹦鹉', '2': '亚历山大鹦鹉', '3': '啄羊鹦鹉', '4': '棕树凤头鹦鹉', '5': '虎皮鹦鹉', '6': '彼氏鹦鹉', '7': '小葵花凤头鹦鹉', '8': '红肩金刚鹦鹉', '9': '蓝眼凤头鹦鹉', '10': '红尾凤头鹦鹉', '11': '白顶啄羊鹦鹉', '12': '橙冠凤头鹦鹉', '13': '花头鹦鹉', '14': '白凤头鹦鹉', '15': '澳东玫瑰鹦鹉', '16': '红顶鹦鹉', '17': '红腰鹦鹉', '18': '鸡尾鹦鹉', '19': '红翅鹦鹉', '20': '和尚鹦鹉', '21': '长嘴凤头鹦鹉', '22': '澳洲王鹦鹉', '23': '黑脸牡丹鹦鹉', '24': '黑凤头鹦鹉', '25': '红蓝鹦鹉', '26': '红额鹦鹉', '27': '红玫瑰鹦鹉', '28': '马岛鹦鹉', '29': '紫蓝金刚鹦鹉', '30': '戈氏凤头鹦鹉', '31': '红脸鹦鹉', '32': '烟色鹦鹉', '33': '红胁绿鹦鹉', '34': '绯胸鹦鹉', '35': '桃脸牡丹鹦鹉', '36': '小凤头鹦鹉', '37': '黑顶鹦鹉', '38': '红腹金刚鹦鹉', '39': '红冠灰凤头鹦鹉', '40': '粉红凤头鹦鹉', '41': '红腹鹦鹉', '42': '彩冠凤头鹦鹉', '43': '红领绿鹦鹉', '44': '非洲灰鹦鹉', '45': '大绿金刚鹦鹉'}
 class DecodeImage(object):
@@ -29,8 +29,11 @@ class DecodeImage(object):
         self.to_rgb = to_rgb
 
     def __call__(self, img):
-        data = np.frombuffer(img, dtype='uint8')
-        img = cv2.imdecode(data, 1)
+        img = base64.b64decode(img)
+        data = np.fromstring(img, dtype='uint8')
+        # print(data)
+        img = cv2.imdecode(data, cv2.IMREAD_COLOR)
+        img=cv2.resize(img,(224,224),interpolation=cv2.INTER_CUBIC)
         if self.to_rgb:
             assert img.shape[2] == 3, 'invalid shape of image[%s]' % (
                 img.shape)
@@ -99,8 +102,8 @@ logger = logging.getLogger(__name__)
 def parse_args():
     class Arg():
         def __init__(self):
-            self.model_file = "./model"
-            self.params_file = "./params"
+            self.model_file = "/usr/soft/bird_recognize_server/recognize/bird_m/model"
+            self.params_file = "/usr/soft/bird_recognize_server/recognize/bird_m/params"
             self.batch_size = 1
             self.use_fp16 = False
             self.use_gpu = False
@@ -109,7 +112,7 @@ def parse_args():
             self.gpu_mem = 8000
             self.enable_benchmark = False
             self.model_name = "birdrec"
-
+    #print(Arg().model_file)
     return Arg()
 
 
@@ -153,9 +156,17 @@ def create_operators():
     return [decode_op, resize_op, crop_op, normalize_op, totensor_op]
 
 
-def preprocess(base64_str, ops):
-    data = base64.b64decode(base64_str)
-    # data = open(fname,"rb").read()
+def preprocess(base64_str, ops, width = 224,height = 224):
+    
+    #data = io.BytesIO(base64.b64decode(base64_str))
+    #img = Image.open(data)
+    #new_img = img.resize((width, height), Image.BILINEAR)
+    #if new_img.mode == 'P':
+    #    new_img = new_img.convert("RGB")
+    #if new_img.mode == 'RGBA':
+    #    new_img = new_img.convert("RGB")
+    #data = new_img.tobytes()
+    data = base64_str
     for op in ops:
         data = op(data)
 
@@ -202,7 +213,7 @@ def main(image_file):
         score = output[np.argmax(output)]
         # logger.info("class: {0}".format(cls))
         # logger.info("score: {0}".format(score))
-        return {"name":cls,"score":score}
+        return {"name":cls,"score":str(score)}
     else:
         for i in range(0, test_num + 10):
             inputs = np.random.rand(args.batch_size, 3, 224,
@@ -220,7 +231,7 @@ def main(image_file):
             score = output[np.argmax(output)]
             # logger.info("class: {0}".format(cls))
             # logger.info("score: {0}".format(score))
-            return {"name":cls,"score":score}
+            return {"name":cls,"score":str(score)}
 
         # fp_message = "FP16" if args.use_fp16 else "FP32"
         # logger.info("{0}\t{1}\tbatch size: {2}\ttime(ms): {3}".format(

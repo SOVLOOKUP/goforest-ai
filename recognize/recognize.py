@@ -6,9 +6,9 @@ from .bird_m import predict
 def my_model(photo) -> dict:
     
     try:
-        return predict.main(photo)
-    except Exception:
-        return {'name':'modelerror','score':0}
+          return predict.main(photo)
+    except Exception as e:
+          return {'name':str(e),'score':0}
 
 
 # def baidu(photo) -> dict:
@@ -70,8 +70,8 @@ def recognize(photo : bytes) -> dict:
     # 添加算法结果
     results = [my_model(photo)]
 
-    # print(results)
-
+    #print(results)
+    
     # 一个算法判断就直接返回结果
     if len(results) == 1:
         return results[0]
@@ -87,7 +87,7 @@ def recognize(photo : bytes) -> dict:
             if result.get('name','null') == count_result[0]:
                 final_result = result
                 break
-
+    #print(final_result)
     return final_result
     
 
